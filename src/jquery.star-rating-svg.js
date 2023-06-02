@@ -95,31 +95,24 @@
 
     // clicked on a rate, apply style and state
     handleRating: function(e){
+      if(this.settings.disableAfterRate) this.$stars.off();
       var index = this.getIndex(e);
       var rating = index + 1;
-
       this.applyRating(rating, this.$el);
       this.executeCallback( rating, this.$el );
-
-      if(this.settings.disableAfterRate){
-        this.$stars.off();
-      }
     },
 
     applyRating: function(rating){
-      var index = rating - 1;
       // paint selected and remove hovered color
-      this.paintStars(index, 'rated');
-      this._state.rating = index + 1;
-      this._state.rated = true;
+      this._state.rating = rating;
+      this.paintStars(rating - 1, 'rated');
     },
 
     restoreState: function(e){
       var index = this.getIndex(e);
       var rating = this._state.rating || -1;
       // determine star color depending on manually rated
-      var colorType = this._state.rated ? 'rated' : 'active';
-      this.paintStars(rating - 1, colorType);
+      this.paintStars(rating - 1, 'active');
       this.settings.onLeave(index + 1, this._state.rating, this.$el);
     },
 
@@ -159,6 +152,12 @@
       var leftClass;
       var rightClass;
       var s = this.settings;
+      const color = {
+        empty: s.emptyColor || 'lightgray',
+        hovered: s.hoverColor || 'orange',
+        active: s.activeColor || 'gold',
+        // rated: 'crimson',
+      }
 
       $.each(this.$stars, function(index, star){
         $polygonLeft = $(star).find('[data-side="left"]');
@@ -168,21 +167,21 @@
         // has another half rating, add half star
         leftClass = ( index - endIndex === 0.5 ) ? stateClass : leftClass;
 
+        $polygonLeft.attr('style', 'fill:'+color[leftClass]);
+        $polygonRight.attr('style', 'fill:'+color[rightClass]);
         $polygonLeft.attr('class', 'svg-'  + leftClass + '-' + this._uid);
         $polygonRight.attr('class', 'svg-'  + rightClass + '-' + this._uid);
 
-        // get color for level
-        var ratedColorsIndex = endIndex >= 0 ? Math.ceil(endIndex) : 0;
-
-        var ratedColor;
-        if (s.ratedColors && s.ratedColors.length && s.ratedColors[ratedColorsIndex]) {
-          ratedColor = s.ratedColors[ratedColorsIndex];
-        } else {
-          ratedColor = this._defaults.ratedColor;
-        }
-
-        // only override colors in rated stars and when rated number is valid
-        if (stateClass === 'rated' && endIndex > -1) {
+        if(stateClass === 'rated' && endIndex > -1) {
+          // get color for level
+          var ratedColorsIndex = endIndex >= 0 ? Math.ceil(endIndex) : 0;
+          var ratedColor;
+          if (s.ratedColors && s.ratedColors.length && s.ratedColors[ratedColorsIndex]) {
+            ratedColor = s.ratedColors[ratedColorsIndex];
+          } else {
+            ratedColor = this._defaults.ratedColor;
+          }
+          // only override colors in rated stars and when rated number is valid
           // limit to painting only to rated stars, and specific case for half star
           if (index <= Math.ceil(endIndex) || (index < 1 && endIndex < 0)) {
             $polygonLeft.attr('style', 'fill:'+ratedColor);
