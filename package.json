@@ -8,6 +8,7 @@
     "star rating",
     "jquery"
   ],
+  "main": "src/jquery.star-rating-svg.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/nashio/star-rating-svg.git"
